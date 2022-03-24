@@ -110,11 +110,12 @@ func load_logs() {
 
 func view_diff(selectOffset int, parent *tview.Grid) tview.Primitive {
 	selectCommit := commitlist[selectOffset].commit
-	parentCommit, _ := commitlist[selectOffset].commit.Parent(0)
+	patch, _ := selectCommit.Patch(nil)
 	if selectOffset < len(commitlist)-1 {
-		parentCommit = commitlist[selectOffset+1].commit
+		next, _ := selectCommit.Parents().Next()
+		nextpatch, _ := next.Patch(selectCommit)
+		patch = nextpatch
 	}
-	patch, _ := selectCommit.Patch(parentCommit)
 
 	table := tview.NewTable()
 
