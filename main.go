@@ -53,16 +53,11 @@ func view_logs_table(table *tview.Table) {
 	table.SetSelectable(true, false)
 }
 
-func view_logs_statusbar(selectOffset int, status_bar *tview.TextView) {
+func view_main_statusbar(selectOffset int, status_bar *tview.TextView) {
 	status_bar_text := fmt.Sprintf("(%s) %s - commit %d of %d",
 		"main",
 		commitlist[selectOffset].commit.Hash.String(), selectOffset+1, len(commitlist))
 	status_bar.SetText(tview.Escape(status_bar_text))
-}
-
-func view_logs_reload(table *tview.Table, status_bar *tview.TextView) {
-	view_logs_table(table)
-	view_logs_statusbar(0, status_bar)
 }
 
 func load_logs() {
@@ -106,6 +101,14 @@ func load_logs() {
 		commitlist = append(commitlist, commit)
 		return nil
 	})
+}
+
+func view_diff_statusbar(selectOffset int, status_bar *tview.TextView, table *tview.Table) {
+	row, _ := table.GetSelection()
+	status_bar_text := fmt.Sprintf("(%s) %s - line %d of %d",
+		"diff",
+		commitlist[selectOffset].commit.Hash.String(), row+1, table.GetRowCount())
+	status_bar.SetText(tview.Escape(status_bar_text))
 }
 
 func view_diff(selectOffset int, parent *tview.Grid) tview.Primitive {
@@ -160,46 +163,58 @@ func view_diff(selectOffset int, parent *tview.Grid) tview.Primitive {
 		idx++
 	}
 
-	view_diff_textbox := table
-	view_diff_textbox.
-		SetSelectable(true, false).
+	table.SetSelectable(true, false).
 		SetBorder(false)
 
-	view_diff_textbox.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	status_bar := tview.NewTextView().
+		SetTextAlign(tview.AlignLeft)
+	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
+	view_diff_statusbar(selectOffset, status_bar, table)
+
+	grid := tview.NewGrid().
+		SetRows(0, 1).
+		SetColumns(0).
+		SetBorders(false).
+		AddItem(table, 0, 0, 1, 1, 1, 1, false).
+		AddItem(status_bar, 1, 0, 1, 1, 1, 1, false)
+
+	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'j':
-				offset, _ := view_diff_textbox.GetSelection()
-				if offset < view_diff_textbox.GetRowCount()-1 {
+				offset, _ := table.GetSelection()
+				if offset < table.GetRowCount()-1 {
 					offset++
 				}
-				view_diff_textbox.Select(offset, 0)
+				view_diff_statusbar(selectOffset, status_bar, table)
+				table.Select(offset, 0)
 			case 'k':
-				offset, _ := view_diff_textbox.GetSelection()
+				offset, _ := table.GetSelection()
 				if offset > 0 {
 					offset--
 				}
-				view_diff_textbox.Select(offset, 0)
+				view_diff_statusbar(selectOffset, status_bar, table)
+				table.Select(offset, 0)
 			case 'q':
-				parent.RemoveItem(view_diff_textbox)
+				parent.RemoveItem(grid)
 				tiggo_app.SetFocus(parent)
 				return nil
 			}
 		}
 		return nil
 	})
-	tiggo_app.SetFocus(view_diff_textbox)
-	return view_diff_textbox
+	tiggo_app.SetFocus(grid)
+	return grid
 }
 
-func view_logs() tview.Primitive {
+func view_main() tview.Primitive {
 	load_logs()
 
 	status_bar := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft)
 	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
-	view_logs_statusbar(0, status_bar)
+	view_main_statusbar(0, status_bar)
 
 	table := tview.NewTable()
 	view_logs_table(table)
@@ -235,7 +250,7 @@ func view_logs() tview.Primitive {
 					selected++
 				}
 				table.Select(selected, 0)
-				view_logs_statusbar(selected, status_bar)
+				view_main_statusbar(selected, status_bar)
 				return nil
 			case 'k':
 				selected, _ := table.GetSelection()
@@ -243,7 +258,7 @@ func view_logs() tview.Primitive {
 					selected--
 				}
 				table.Select(selected, 0)
-				view_logs_statusbar(selected, status_bar)
+				view_main_statusbar(selected, status_bar)
 				return nil
 			}
 		}
@@ -251,10 +266,6 @@ func view_logs() tview.Primitive {
 	})
 
 	return grid
-}
-
-func view_main() tview.Primitive {
-	return view_logs()
 }
 
 func create_tiggo_app() {
