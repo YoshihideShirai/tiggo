@@ -55,8 +55,6 @@ func load_logs() {
 		panic(err)
 	}
 
-	gitReposHead = ref
-
 	bIter, _ := gitRepos.Branches()
 	bIter.ForEach(func(r *plumbing.Reference) error {
 		branches = append(branches, r)
@@ -121,7 +119,7 @@ func view_main() tview.Primitive {
 		switch event.Key() {
 		case tcell.KeyEnter:
 			selected, _ := table.GetSelection()
-			v_diff := view_diff(selected, grid)
+			v_diff := view_diff(commitlist[selected].commit.Hash, grid)
 			grid.AddItem(v_diff, 0, 1, 1, 1, 1, 1, false)
 			return nil
 		case tcell.KeyRune:

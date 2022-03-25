@@ -18,7 +18,6 @@ type gitcommit struct {
 var tiggo_app *tview.Application
 
 var gitRepos *git.Repository
-var gitReposHead *plumbing.Reference
 var commitlist []gitcommit
 
 func create_tiggo_app() {

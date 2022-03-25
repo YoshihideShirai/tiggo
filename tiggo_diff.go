@@ -5,24 +5,25 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/rivo/tview"
 )
 
-func view_diff_statusbar(selectOffset int, status_bar *tview.TextView, table *tview.Table) {
+func view_diff_statusbar(selectCommitHash plumbing.Hash, status_bar *tview.TextView, table *tview.Table) {
 	row, _ := table.GetSelection()
 	status_bar_text := fmt.Sprintf("(%s) %s - line %d of %d",
 		"diff",
-		commitlist[selectOffset].commit.Hash.String(), row+1, table.GetRowCount())
+		selectCommitHash.String(), row+1, table.GetRowCount())
 	status_bar.SetText(tview.Escape(status_bar_text))
 }
 
-func view_diff(selectOffset int, parent *tview.Grid) tview.Primitive {
-	selectCommit := commitlist[selectOffset].commit
+func view_diff(selectCommitHash plumbing.Hash, parent *tview.Grid) tview.Primitive {
+	selectCommit, _ := gitRepos.CommitObject(selectCommitHash)
 	selectTree, _ := selectCommit.Tree()
 	next := &object.Tree{}
-	if selectOffset < len(commitlist)-1 {
-		c_next, _ := selectCommit.Parents().Next()
+	c_next, err := selectCommit.Parents().Next()
+	if err == nil {
 		t_next, _ := c_next.Tree()
 		next = t_next
 	}
@@ -75,7 +76,7 @@ func view_diff(selectOffset int, parent *tview.Grid) tview.Primitive {
 	status_bar := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft)
 	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
-	view_diff_statusbar(selectOffset, status_bar, table)
+	view_diff_statusbar(selectCommitHash, status_bar, table)
 
 	grid := tview.NewGrid().
 		SetRows(0, 1).
@@ -93,14 +94,14 @@ func view_diff(selectOffset int, parent *tview.Grid) tview.Primitive {
 				if offset < table.GetRowCount()-1 {
 					offset++
 				}
-				view_diff_statusbar(selectOffset, status_bar, table)
+				view_diff_statusbar(selectCommitHash, status_bar, table)
 				table.Select(offset, 0)
 			case 'k':
 				offset, _ := table.GetSelection()
 				if offset > 0 {
 					offset--
 				}
-				view_diff_statusbar(selectOffset, status_bar, table)
+				view_diff_statusbar(selectCommitHash, status_bar, table)
 				table.Select(offset, 0)
 			case 'q':
 				parent.RemoveItem(grid)
