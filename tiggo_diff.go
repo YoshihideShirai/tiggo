@@ -25,54 +25,69 @@ func get_commit_patch(selectCommit *object.Commit) (*object.Patch, error) {
 	return next.Patch(selectTree)
 }
 
-func view_diff_statusbar(selectCommitHash plumbing.Hash, status_bar *tview.TextView, table *tview.Table) {
+func view_diff_statusbar(selectCommit gitcommit, status_bar *tview.TextView, table *tview.Table) {
 	row, _ := table.GetSelection()
-	status_bar_text := fmt.Sprintf("(%s) %s - line %d of %d",
-		"diff",
-		selectCommitHash.String(), row+1, table.GetRowCount())
+	status_bar_text := fmt.Sprintf("(%s)", "diff")
+	if selectCommit.commit != nil {
+		status_bar_text += fmt.Sprintf(" %s", selectCommit.commit.String())
+	}
+	status_bar_text += fmt.Sprintf(" - line %d of %d",
+		row+1, table.GetRowCount())
 	status_bar.SetText(tview.Escape(status_bar_text))
 }
 
 func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
-	patch, _ := get_commit_patch(selectCommit.commit)
 	commit := selectCommit.commit
+	worktree := selectCommit.worktree
+	var stats_output string
+	var patch_output string
+	if worktree != nil {
+		wtstatus, _ := worktree.Status()
+		stats_output += wtstatus.String()
+	}
+	if commit != nil {
+		patch, _ := get_commit_patch(commit)
+		stats_output += patch.Stats().String()
+		patch_output += patch.String()
+	}
+
 	table := tview.NewTable()
 
 	idx := 0
-	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-		"[green]commit       %s[white]",
-		tview.Escape(commit.Hash.String()))))
-	idx++
-	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-		"[blue]Author       %s[white]",
-		tview.Escape(commit.Author.String()))))
-	idx++
-	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-		"[yellow]AuthorDate   %s[white]",
-		tview.Escape(commit.Author.When.String()))))
-	idx++
-	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-		"[purple]Commiter     %s[white]",
-		tview.Escape(commit.Committer.String()))))
-	idx++
-	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-		"[yellow]CommiterDate %s[white]",
-		tview.Escape(commit.Committer.When.String()))))
-	idx++
-	table.SetCell(idx, 0, tview.NewTableCell(""))
-	idx++
-
-	stats_output := patch.Stats().String()
-	for _, v := range strings.Split(stats_output, "\n") {
+	if commit != nil {
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			tview.Escape(v))))
+			"[green]commit       %s[white]",
+			tview.Escape(commit.Hash.String()))))
+		idx++
+		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
+			"[blue]Author       %s[white]",
+			tview.Escape(commit.Author.String()))))
+		idx++
+		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
+			"[yellow]AuthorDate   %s[white]",
+			tview.Escape(commit.Author.When.String()))))
+		idx++
+		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
+			"[purple]Commiter     %s[white]",
+			tview.Escape(commit.Committer.String()))))
+		idx++
+		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
+			"[yellow]CommiterDate %s[white]",
+			tview.Escape(commit.Committer.When.String()))))
+		idx++
+		table.SetCell(idx, 0, tview.NewTableCell(""))
 		idx++
 	}
 
-	patch_output := patch.String()
+	for _, v := range strings.Split(stats_output, "\n") {
+		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
+			tview.Escape(v))).SetExpansion(1))
+		idx++
+	}
+
 	for _, v := range strings.Split(patch_output, "\n") {
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			tview.Escape(v))))
+			tview.Escape(v))).SetExpansion(1))
 		idx++
 	}
 
@@ -82,7 +97,7 @@ func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 	status_bar := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft)
 	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
-	view_diff_statusbar(commit.Hash, status_bar, table)
+	view_diff_statusbar(selectCommit, status_bar, table)
 
 	grid := tview.NewGrid().
 		SetRows(0, 1).
@@ -100,14 +115,14 @@ func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 				if offset < table.GetRowCount()-1 {
 					offset++
 				}
-				view_diff_statusbar(commit.Hash, status_bar, table)
+				view_diff_statusbar(selectCommit, status_bar, table)
 				table.Select(offset, 0)
 			case 'k':
 				offset, _ := table.GetSelection()
 				if offset > 0 {
 					offset--
 				}
-				view_diff_statusbar(commit.Hash, status_bar, table)
+				view_diff_statusbar(selectCommit, status_bar, table)
 				table.Select(offset, 0)
 			case 'q':
 				parent.RemoveItem(grid)
