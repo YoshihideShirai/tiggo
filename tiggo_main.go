@@ -58,6 +58,7 @@ func view_main_table(commitlist []gitcommit) *tview.Table {
 		}
 		commit_when.SetTextColor(tcell.ColorBlue)
 		commit_authorname.SetTextColor(tcell.ColorGreen)
+		commit_message.SetExpansion(1)
 		table.SetCell(idx, 0, commit_when)
 		table.SetCell(idx, 1, commit_authorname)
 		table.SetCell(idx, 2, commit_message)
