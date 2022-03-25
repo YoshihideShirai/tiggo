@@ -159,7 +159,7 @@ func view_main() tview.Primitive {
 		switch event.Key() {
 		case tcell.KeyEnter:
 			selected, _ := table.GetSelection()
-			v_diff := view_diff(commitlist[selected].commit.Hash, grid)
+			v_diff := view_diff(commitlist[selected], grid)
 			grid.AddItem(v_diff, 0, 1, 1, 1, 1, 1, false)
 			return nil
 		case tcell.KeyRune:

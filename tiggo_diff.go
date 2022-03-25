@@ -33,32 +33,31 @@ func view_diff_statusbar(selectCommitHash plumbing.Hash, status_bar *tview.TextV
 	status_bar.SetText(tview.Escape(status_bar_text))
 }
 
-func view_diff(selectCommitHash plumbing.Hash, parent *tview.Grid) tview.Primitive {
-	selectCommit, _ := get_commit_from_hash(selectCommitHash)
-	patch, _ := get_commit_patch(selectCommit)
-
+func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
+	patch, _ := get_commit_patch(selectCommit.commit)
+	commit := selectCommit.commit
 	table := tview.NewTable()
 
 	idx := 0
 	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 		"[green]commit       %s[white]",
-		tview.Escape(selectCommit.Hash.String()))))
+		tview.Escape(commit.Hash.String()))))
 	idx++
 	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 		"[blue]Author       %s[white]",
-		tview.Escape(selectCommit.Author.String()))))
+		tview.Escape(commit.Author.String()))))
 	idx++
 	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 		"[yellow]AuthorDate   %s[white]",
-		tview.Escape(selectCommit.Author.When.String()))))
+		tview.Escape(commit.Author.When.String()))))
 	idx++
 	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 		"[purple]Commiter     %s[white]",
-		tview.Escape(selectCommit.Committer.String()))))
+		tview.Escape(commit.Committer.String()))))
 	idx++
 	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 		"[yellow]CommiterDate %s[white]",
-		tview.Escape(selectCommit.Committer.When.String()))))
+		tview.Escape(commit.Committer.When.String()))))
 	idx++
 	table.SetCell(idx, 0, tview.NewTableCell(""))
 	idx++
@@ -83,7 +82,7 @@ func view_diff(selectCommitHash plumbing.Hash, parent *tview.Grid) tview.Primiti
 	status_bar := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft)
 	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
-	view_diff_statusbar(selectCommitHash, status_bar, table)
+	view_diff_statusbar(commit.Hash, status_bar, table)
 
 	grid := tview.NewGrid().
 		SetRows(0, 1).
@@ -101,14 +100,14 @@ func view_diff(selectCommitHash plumbing.Hash, parent *tview.Grid) tview.Primiti
 				if offset < table.GetRowCount()-1 {
 					offset++
 				}
-				view_diff_statusbar(selectCommitHash, status_bar, table)
+				view_diff_statusbar(commit.Hash, status_bar, table)
 				table.Select(offset, 0)
 			case 'k':
 				offset, _ := table.GetSelection()
 				if offset > 0 {
 					offset--
 				}
-				view_diff_statusbar(selectCommitHash, status_bar, table)
+				view_diff_statusbar(commit.Hash, status_bar, table)
 				table.Select(offset, 0)
 			case 'q':
 				parent.RemoveItem(grid)
