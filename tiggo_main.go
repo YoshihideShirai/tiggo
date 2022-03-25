@@ -10,8 +10,13 @@ import (
 	"github.com/rivo/tview"
 )
 
-func view_main_table(table *tview.Table) {
-	table.Clear()
+type gitcommit struct {
+	commit *object.Commit
+	ref    []*plumbing.Reference
+}
+
+func view_main_table(commitlist []gitcommit) *tview.Table {
+	table := tview.NewTable()
 	for idx, commit_e := range commitlist {
 		c := commit_e.commit
 		commit_message_text := ""
@@ -38,16 +43,20 @@ func view_main_table(table *tview.Table) {
 		table.SetCell(idx, 2, commit_message)
 	}
 	table.SetSelectable(true, false)
+	return table
 }
 
-func view_main_statusbar(selectOffset int, status_bar *tview.TextView) {
+func view_main_statusbar(selectCommit gitcommit, table *tview.Table, status_bar *tview.TextView) {
+	row, _ := table.GetSelection()
 	status_bar_text := fmt.Sprintf("(%s) %s - commit %d of %d",
 		"main",
-		commitlist[selectOffset].commit.Hash.String(), selectOffset+1, len(commitlist))
+		selectCommit.commit.Hash.String(), row+1, table.GetRowCount())
 	status_bar.SetText(tview.Escape(status_bar_text))
 }
 
-func load_logs() {
+func load_logs() []gitcommit {
+	var commitlist []gitcommit
+
 	var branches []*plumbing.Reference
 	var tags []*plumbing.Reference
 	ref, err := gitRepos.Head()
@@ -86,18 +95,19 @@ func load_logs() {
 		commitlist = append(commitlist, commit)
 		return nil
 	})
+	return commitlist
 }
 
 func view_main() tview.Primitive {
-	load_logs()
+	commitlist := load_logs()
 
 	status_bar := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft)
 	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
-	view_main_statusbar(0, status_bar)
 
-	table := tview.NewTable()
-	view_main_table(table)
+	table := view_main_table(commitlist)
+
+	view_main_statusbar(commitlist[0], table, status_bar)
 
 	grid_log := tview.NewGrid().
 		SetRows(0, 1).
@@ -130,7 +140,7 @@ func view_main() tview.Primitive {
 					selected++
 				}
 				table.Select(selected, 0)
-				view_main_statusbar(selected, status_bar)
+				view_main_statusbar(commitlist[selected], table, status_bar)
 				return nil
 			case 'k':
 				selected, _ := table.GetSelection()
@@ -138,7 +148,7 @@ func view_main() tview.Primitive {
 					selected--
 				}
 				table.Select(selected, 0)
-				view_main_statusbar(selected, status_bar)
+				view_main_statusbar(commitlist[selected], table, status_bar)
 				return nil
 			}
 		}

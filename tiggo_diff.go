@@ -10,6 +10,21 @@ import (
 	"github.com/rivo/tview"
 )
 
+func get_commit_from_hash(selectCommitHash plumbing.Hash) (*object.Commit, error) {
+	return gitRepos.CommitObject(selectCommitHash)
+}
+
+func get_commit_patch(selectCommit *object.Commit) (*object.Patch, error) {
+	selectTree, _ := selectCommit.Tree()
+	next := &object.Tree{}
+	c_next, err := selectCommit.Parents().Next()
+	if err == nil {
+		t_next, _ := c_next.Tree()
+		next = t_next
+	}
+	return next.Patch(selectTree)
+}
+
 func view_diff_statusbar(selectCommitHash plumbing.Hash, status_bar *tview.TextView, table *tview.Table) {
 	row, _ := table.GetSelection()
 	status_bar_text := fmt.Sprintf("(%s) %s - line %d of %d",
@@ -19,20 +34,12 @@ func view_diff_statusbar(selectCommitHash plumbing.Hash, status_bar *tview.TextV
 }
 
 func view_diff(selectCommitHash plumbing.Hash, parent *tview.Grid) tview.Primitive {
-	selectCommit, _ := gitRepos.CommitObject(selectCommitHash)
-	selectTree, _ := selectCommit.Tree()
-	next := &object.Tree{}
-	c_next, err := selectCommit.Parents().Next()
-	if err == nil {
-		t_next, _ := c_next.Tree()
-		next = t_next
-	}
-	patch, _ := next.Patch(selectTree)
+	selectCommit, _ := get_commit_from_hash(selectCommitHash)
+	patch, _ := get_commit_patch(selectCommit)
 
 	table := tview.NewTable()
 
 	idx := 0
-
 	table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 		"[green]commit       %s[white]",
 		tview.Escape(selectCommit.Hash.String()))))
