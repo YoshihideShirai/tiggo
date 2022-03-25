@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/go-git/go-git/v5"
@@ -11,31 +12,50 @@ import (
 )
 
 type gitcommit struct {
-	commit *object.Commit
-	ref    []*plumbing.Reference
+	worktree *git.Worktree
+	commit   *object.Commit
+	ref      []*plumbing.Reference
 }
 
 func view_main_table(commitlist []gitcommit) *tview.Table {
 	table := tview.NewTable()
+
+	var commit_when *tview.TableCell
+	var commit_authorname *tview.TableCell
+	var commit_message *tview.TableCell
+
 	for idx, commit_e := range commitlist {
-		c := commit_e.commit
-		commit_message_text := ""
-		for _, v := range commit_e.ref {
-			if v.Name().IsTag() {
-				commit_message_text += fmt.Sprintf("[purple]<%s>[white] ", v.Name().Short())
-			} else if v.Name().IsBranch() {
-				commit_message_text += fmt.Sprintf("[blue](%s)[white] ", v.Name().Short())
-			} else {
-				commit_message_text += fmt.Sprintf("[yellow]{%s}[white] ", v.Name())
+		if commit_e.worktree != nil {
+			wtstat, _ := commit_e.worktree.Status()
+			if wtstat.IsClean() == true {
+				continue
 			}
+			commit_when = tview.NewTableCell(time.Now().Format("2006-01-02 15:04:05 07:00")).
+				SetAlign(tview.AlignLeft)
+			commit_authorname = tview.NewTableCell("Unknown").
+				SetAlign(tview.AlignLeft)
+			commit_message = tview.NewTableCell("Unstaged changes").
+				SetAlign(tview.AlignLeft)
+		} else {
+			c := commit_e.commit
+			commit_message_text := ""
+			for _, v := range commit_e.ref {
+				if v.Name().IsTag() {
+					commit_message_text += fmt.Sprintf("[purple]<%s>[white] ", v.Name().Short())
+				} else if v.Name().IsBranch() {
+					commit_message_text += fmt.Sprintf("[blue](%s)[white] ", v.Name().Short())
+				} else {
+					commit_message_text += fmt.Sprintf("[yellow]{%s}[white] ", v.Name())
+				}
+			}
+			commit_message_text += tview.Escape(c.Message)
+			commit_when = tview.NewTableCell(c.Author.When.Format("2006-01-02 15:04:05 07:00")).
+				SetAlign(tview.AlignLeft)
+			commit_authorname = tview.NewTableCell(c.Author.Name).
+				SetAlign(tview.AlignLeft)
+			commit_message = tview.NewTableCell(commit_message_text).
+				SetAlign(tview.AlignLeft)
 		}
-		commit_message_text += tview.Escape(c.Message)
-		commit_when := tview.NewTableCell(c.Author.When.Format("2006-01-02 15:04:05 07:00")).
-			SetAlign(tview.AlignLeft)
-		commit_authorname := tview.NewTableCell(c.Author.Name).
-			SetAlign(tview.AlignLeft)
-		commit_message := tview.NewTableCell(commit_message_text).
-			SetAlign(tview.AlignLeft)
 		commit_when.SetTextColor(tcell.ColorBlue)
 		commit_authorname.SetTextColor(tcell.ColorGreen)
 		table.SetCell(idx, 0, commit_when)
@@ -48,9 +68,14 @@ func view_main_table(commitlist []gitcommit) *tview.Table {
 
 func view_main_statusbar(selectCommit gitcommit, table *tview.Table, status_bar *tview.TextView) {
 	row, _ := table.GetSelection()
-	status_bar_text := fmt.Sprintf("(%s) %s - commit %d of %d",
-		"main",
-		selectCommit.commit.Hash.String(), row+1, table.GetRowCount())
+	var status_bar_text string
+	status_bar_text = "(main)"
+	if selectCommit.commit != nil {
+		status_bar_text += fmt.Sprintf(" %s - commit %d of %d",
+			selectCommit.commit.Hash.String(), row+1, table.GetRowCount())
+	} else {
+		status_bar_text += " Unstaged changes"
+	}
 	status_bar.SetText(tview.Escape(status_bar_text))
 }
 
@@ -63,6 +88,11 @@ func load_logs() []gitcommit {
 	if err != nil {
 		panic(err)
 	}
+
+	wt, _ := gitRepos.Worktree()
+	var wtcommit gitcommit
+	wtcommit.worktree = wt
+	commitlist = append(commitlist, wtcommit)
 
 	bIter, _ := gitRepos.Branches()
 	bIter.ForEach(func(r *plumbing.Reference) error {
