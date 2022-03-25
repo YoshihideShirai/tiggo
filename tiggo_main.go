@@ -24,7 +24,8 @@ func view_main_table(commitlist []gitcommit) *tview.Table {
 	var commit_authorname *tview.TableCell
 	var commit_message *tview.TableCell
 
-	for idx, commit_e := range commitlist {
+	idx := 0
+	for _, commit_e := range commitlist {
 		if commit_e.worktree != nil {
 			wtstat, _ := commit_e.worktree.Status()
 			if wtstat.IsClean() == true {
@@ -62,6 +63,7 @@ func view_main_table(commitlist []gitcommit) *tview.Table {
 		table.SetCell(idx, 0, commit_when)
 		table.SetCell(idx, 1, commit_authorname)
 		table.SetCell(idx, 2, commit_message)
+		idx++
 	}
 	table.SetSelectable(true, false)
 	return table
