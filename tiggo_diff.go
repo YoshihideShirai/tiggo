@@ -56,56 +56,45 @@ func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 	idx := 0
 	if commit != nil {
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			"[green]commit       %s[white]",
+			"[green]commit:       %s[white]",
 			tview.Escape(commit.Hash.String()))))
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			"[blue]Author       %s[white]",
+			"[blue]Author:       %s[white]",
 			tview.Escape(commit.Author.String()))))
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			"[yellow]AuthorDate   %s[white]",
+			"[yellow]AuthorDate:   %s[white]",
 			tview.Escape(commit.Author.When.String()))))
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			"[purple]Commiter     %s[white]",
+			"[purple]Commiter:     %s[white]",
 			tview.Escape(commit.Committer.String()))))
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			"[yellow]CommiterDate %s[white]",
+			"[yellow]CommiterDate: %s[white]",
 			tview.Escape(commit.Committer.When.String()))))
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(""))
 		idx++
 		for _, v := range strings.Split(commit.Message, "\n") {
-			if len(v) == 0 {
-				continue
-			}
 			table.SetCell(idx, 0, tview.NewTableCell(
 				fmt.Sprintf("    %s", tview.Escape(v))))
 			idx++
 		}
-	}
-
-	table.SetCell(idx, 0, tview.NewTableCell("---"))
-	idx++
-	for _, v := range strings.Split(stats_output, "\n") {
-		if len(v) == 0 {
-			continue
-		}
-		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			tview.Escape(v))).SetExpansion(1))
+		table.SetCell(idx, 0, tview.NewTableCell("---"))
 		idx++
 	}
 
-	table.SetCell(idx, 0, tview.NewTableCell(""))
-	idx++
-	for _, v := range strings.Split(patch_output, "\n") {
-		if len(v) == 0 {
-			continue
-		}
+	for _, v := range strings.Split(stats_output, "\n") {
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
-			tview.Escape(v))).SetExpansion(1))
+			"%s", tview.Escape(v))).SetExpansion(1))
+		idx++
+	}
+
+	for _, v := range strings.Split(patch_output, "\n") {
+		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
+			"%s", tview.Escape(v))).SetExpansion(1))
 		idx++
 	}
 
