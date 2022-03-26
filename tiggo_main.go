@@ -33,7 +33,8 @@ func ViewMainTable(commitlist []gitcommit) (*tview.Table, bool) {
 			if wtstat.IsClean() == true {
 				continue
 			}
-			commit_when = tview.NewTableCell(time.Now().Format("2006-01-02 15:04:05 07:00")).
+			commit_when = tview.NewTableCell(
+				time.Now().Format("2006-01-02 15:04:05 Z07:00")).
 				SetAlign(tview.AlignLeft)
 			commit_authorname = tview.NewTableCell("Unknown").
 				SetAlign(tview.AlignLeft)
@@ -53,7 +54,7 @@ func ViewMainTable(commitlist []gitcommit) (*tview.Table, bool) {
 				}
 			}
 			commit_message_text += tview.Escape(c.Message)
-			commit_when = tview.NewTableCell(c.Author.When.Format("2006-01-02 15:04:05 07:00")).
+			commit_when = tview.NewTableCell(c.Author.When.Format("2006-01-02 15:04:05 Z07:00")).
 				SetAlign(tview.AlignLeft)
 			commit_authorname = tview.NewTableCell(c.Author.Name).
 				SetAlign(tview.AlignLeft)

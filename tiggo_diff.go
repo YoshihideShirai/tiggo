@@ -65,7 +65,8 @@ func ViewDiff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 			"[yellow]AuthorDate:   %s[white]",
-			tview.Escape(commit.Author.When.String()))))
+			tview.Escape(
+				commit.Author.When.Format("2006-01-02 15:04:05 Z07:00")))))
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 			"[purple]Commiter:     %s[white]",
@@ -73,7 +74,8 @@ func ViewDiff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 			"[yellow]CommiterDate: %s[white]",
-			tview.Escape(commit.Committer.When.String()))))
+			tview.Escape(
+				commit.Committer.When.Format("2006-01-02 15:04:05 Z07:00")))))
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(""))
 		idx++
