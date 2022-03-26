@@ -17,8 +17,10 @@ type gitcommit struct {
 	ref      []*plumbing.Reference
 }
 
-func view_main_table(commitlist []gitcommit) *tview.Table {
+func view_main_table(commitlist []gitcommit) (*tview.Table, bool) {
 	table := tview.NewTable()
+
+	add_unstaged := false
 
 	var commit_when *tview.TableCell
 	var commit_authorname *tview.TableCell
@@ -37,6 +39,7 @@ func view_main_table(commitlist []gitcommit) *tview.Table {
 				SetAlign(tview.AlignLeft)
 			commit_message = tview.NewTableCell("Unstaged changes").
 				SetAlign(tview.AlignLeft)
+			add_unstaged = true
 		} else {
 			c := commit_e.commit
 			commit_message_text := ""
@@ -66,7 +69,7 @@ func view_main_table(commitlist []gitcommit) *tview.Table {
 		idx++
 	}
 	table.SetSelectable(true, false)
-	return table
+	return table, add_unstaged
 }
 
 func view_main_statusbar(selectCommit gitcommit, table *tview.Table, status_bar *tview.TextView) {
@@ -138,7 +141,7 @@ func view_main() tview.Primitive {
 		SetTextAlign(tview.AlignLeft)
 	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
 
-	table := view_main_table(commitlist)
+	table, add_unstaged := view_main_table(commitlist)
 
 	view_main_statusbar(commitlist[0], table, status_bar)
 
@@ -162,6 +165,9 @@ func view_main() tview.Primitive {
 		switch event.Key() {
 		case tcell.KeyEnter:
 			selected, _ := table.GetSelection()
+			if !add_unstaged {
+				selected++
+			}
 			v_diff := view_diff(commitlist[selected], grid)
 			grid.AddItem(v_diff, 0, 1, 1, 1, 1, 1, false)
 			return nil
