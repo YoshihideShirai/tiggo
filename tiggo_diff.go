@@ -98,6 +98,8 @@ func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 		idx++
 	}
 
+	table.SetCell(idx, 0, tview.NewTableCell(""))
+	idx++
 	for _, v := range strings.Split(patch_output, "\n") {
 		if len(v) == 0 {
 			continue
