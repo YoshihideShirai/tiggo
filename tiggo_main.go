@@ -75,14 +75,14 @@ func ViewMainTable(commitlist []gitcommit) (*tview.Table, bool) {
 func ViewMainStatusbar(selectCommit gitcommit, table *tview.Table, status_bar *tview.TextView) {
 	row, _ := table.GetSelection()
 	var status_bar_text string
-	status_bar_text = "(main)"
+	status_bar_text = "[main]"
 	if selectCommit.commit != nil {
 		status_bar_text += fmt.Sprintf(" %s - commit %d of %d",
 			selectCommit.commit.Hash.String(), row+1, table.GetRowCount())
 	} else {
 		status_bar_text += " Unstaged changes"
 	}
-	status_bar.SetText(tview.Escape(status_bar_text))
+	status_bar.SetText(status_bar_text)
 }
 
 func LoadLogs() []gitcommit {

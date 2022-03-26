@@ -27,13 +27,13 @@ func CommitGetPatch(selectCommit *object.Commit) (*object.Patch, error) {
 
 func ViewDiffStatusbar(selectCommit gitcommit, status_bar *tview.TextView, table *tview.Table) {
 	row, _ := table.GetSelection()
-	status_bar_text := fmt.Sprintf("(%s)", "diff")
+	status_bar_text := fmt.Sprintf("[%s]", "diff")
 	if selectCommit.commit != nil {
 		status_bar_text += fmt.Sprintf(" %s", selectCommit.commit.String())
 	}
 	status_bar_text += fmt.Sprintf(" - line %d of %d",
 		row+1, table.GetRowCount())
-	status_bar.SetText(tview.Escape(status_bar_text))
+	status_bar.SetText(status_bar_text)
 }
 
 func ViewDiff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
