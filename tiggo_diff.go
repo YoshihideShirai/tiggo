@@ -77,15 +77,31 @@ func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 		idx++
 		table.SetCell(idx, 0, tview.NewTableCell(""))
 		idx++
+		for _, v := range strings.Split(commit.Message, "\n") {
+			if len(v) == 0 {
+				continue
+			}
+			table.SetCell(idx, 0, tview.NewTableCell(
+				fmt.Sprintf("    %s", tview.Escape(v))))
+			idx++
+		}
 	}
 
+	table.SetCell(idx, 0, tview.NewTableCell("---"))
+	idx++
 	for _, v := range strings.Split(stats_output, "\n") {
+		if len(v) == 0 {
+			continue
+		}
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 			tview.Escape(v))).SetExpansion(1))
 		idx++
 	}
 
 	for _, v := range strings.Split(patch_output, "\n") {
+		if len(v) == 0 {
+			continue
+		}
 		table.SetCell(idx, 0, tview.NewTableCell(fmt.Sprintf(
 			tview.Escape(v))).SetExpansion(1))
 		idx++
