@@ -10,11 +10,11 @@ import (
 	"github.com/rivo/tview"
 )
 
-func get_commit_from_hash(selectCommitHash plumbing.Hash) (*object.Commit, error) {
+func GetCommitFromHash(selectCommitHash plumbing.Hash) (*object.Commit, error) {
 	return gitRepos.CommitObject(selectCommitHash)
 }
 
-func get_commit_patch(selectCommit *object.Commit) (*object.Patch, error) {
+func CommitGetPatch(selectCommit *object.Commit) (*object.Patch, error) {
 	selectTree, _ := selectCommit.Tree()
 	next := &object.Tree{}
 	c_next, err := selectCommit.Parents().Next()
@@ -25,7 +25,7 @@ func get_commit_patch(selectCommit *object.Commit) (*object.Patch, error) {
 	return next.Patch(selectTree)
 }
 
-func view_diff_statusbar(selectCommit gitcommit, status_bar *tview.TextView, table *tview.Table) {
+func ViewDiffStatusbar(selectCommit gitcommit, status_bar *tview.TextView, table *tview.Table) {
 	row, _ := table.GetSelection()
 	status_bar_text := fmt.Sprintf("(%s)", "diff")
 	if selectCommit.commit != nil {
@@ -36,7 +36,7 @@ func view_diff_statusbar(selectCommit gitcommit, status_bar *tview.TextView, tab
 	status_bar.SetText(tview.Escape(status_bar_text))
 }
 
-func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
+func ViewDiff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 	commit := selectCommit.commit
 	worktree := selectCommit.worktree
 	var stats_output string
@@ -46,7 +46,7 @@ func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 		stats_output += wtstatus.String()
 	}
 	if commit != nil {
-		patch, _ := get_commit_patch(commit)
+		patch, _ := CommitGetPatch(commit)
 		stats_output += patch.Stats().String()
 		patch_output += patch.String()
 	}
@@ -104,7 +104,7 @@ func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 	status_bar := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft)
 	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
-	view_diff_statusbar(selectCommit, status_bar, table)
+	ViewDiffStatusbar(selectCommit, status_bar, table)
 
 	grid := tview.NewGrid().
 		SetRows(0, 1).
@@ -122,23 +122,23 @@ func view_diff(selectCommit gitcommit, parent *tview.Grid) tview.Primitive {
 				if offset < table.GetRowCount()-1 {
 					offset++
 				}
-				view_diff_statusbar(selectCommit, status_bar, table)
+				ViewDiffStatusbar(selectCommit, status_bar, table)
 				table.Select(offset, 0)
 			case 'k':
 				offset, _ := table.GetSelection()
 				if offset > 0 {
 					offset--
 				}
-				view_diff_statusbar(selectCommit, status_bar, table)
+				ViewDiffStatusbar(selectCommit, status_bar, table)
 				table.Select(offset, 0)
 			case 'q':
 				parent.RemoveItem(grid)
-				tiggo_app.SetFocus(parent)
+				tiggoApp.SetFocus(parent)
 				return nil
 			}
 		}
 		return nil
 	})
-	tiggo_app.SetFocus(grid)
+	tiggoApp.SetFocus(grid)
 	return grid
 }

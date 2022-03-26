@@ -8,10 +8,10 @@ import (
 	"github.com/rivo/tview"
 )
 
-var tiggo_app *tview.Application
+var tiggoApp *tview.Application
 var gitRepos *git.Repository
 
-func create_tiggo_app() {
+func CreateTiggoApp() {
 	newPrimitive := func(text string) tview.Primitive {
 		v := tview.NewTextView().
 			SetTextAlign(tview.AlignLeft)
@@ -20,7 +20,7 @@ func create_tiggo_app() {
 		return v
 	}
 
-	main := view_main()
+	main := ViewMain()
 
 	grid := tview.NewGrid().
 		SetRows(1, 0).
@@ -45,7 +45,7 @@ func create_tiggo_app() {
 		return event
 	})
 
-	tiggo_app = app
+	tiggoApp = app
 }
 
 func main() {
@@ -59,9 +59,9 @@ func main() {
 	}
 	gitRepos = r
 
-	create_tiggo_app()
+	CreateTiggoApp()
 
-	if err := tiggo_app.Run(); err != nil {
+	if err := tiggoApp.Run(); err != nil {
 		panic(err)
 	}
 }

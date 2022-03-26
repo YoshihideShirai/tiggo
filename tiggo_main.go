@@ -17,7 +17,7 @@ type gitcommit struct {
 	ref      []*plumbing.Reference
 }
 
-func view_main_table(commitlist []gitcommit) (*tview.Table, bool) {
+func ViewMainTable(commitlist []gitcommit) (*tview.Table, bool) {
 	table := tview.NewTable()
 
 	add_unstaged := false
@@ -72,7 +72,7 @@ func view_main_table(commitlist []gitcommit) (*tview.Table, bool) {
 	return table, add_unstaged
 }
 
-func view_main_statusbar(selectCommit gitcommit, table *tview.Table, status_bar *tview.TextView) {
+func ViewMainStatusbar(selectCommit gitcommit, table *tview.Table, status_bar *tview.TextView) {
 	row, _ := table.GetSelection()
 	var status_bar_text string
 	status_bar_text = "(main)"
@@ -85,7 +85,7 @@ func view_main_statusbar(selectCommit gitcommit, table *tview.Table, status_bar 
 	status_bar.SetText(tview.Escape(status_bar_text))
 }
 
-func load_logs() []gitcommit {
+func LoadLogs() []gitcommit {
 	var commitlist []gitcommit
 
 	var branches []*plumbing.Reference
@@ -134,16 +134,16 @@ func load_logs() []gitcommit {
 	return commitlist
 }
 
-func view_main() tview.Primitive {
-	commitlist := load_logs()
+func ViewMain() tview.Primitive {
+	commitlist := LoadLogs()
 
 	status_bar := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft)
 	status_bar.SetBackgroundColor(tcell.ColorBlueViolet)
 
-	table, add_unstaged := view_main_table(commitlist)
+	table, add_unstaged := ViewMainTable(commitlist)
 
-	view_main_statusbar(commitlist[0], table, status_bar)
+	ViewMainStatusbar(commitlist[0], table, status_bar)
 
 	grid_log := tview.NewGrid().
 		SetRows(0, 1).
@@ -159,7 +159,7 @@ func view_main() tview.Primitive {
 		AddItem(grid_log, 0, 0, 1, 1, 1, 1, false)
 
 	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if tiggo_app.GetFocus() != grid {
+		if tiggoApp.GetFocus() != grid {
 			return event
 		}
 		switch event.Key() {
@@ -168,7 +168,7 @@ func view_main() tview.Primitive {
 			if !add_unstaged {
 				selected++
 			}
-			v_diff := view_diff(commitlist[selected], grid)
+			v_diff := ViewDiff(commitlist[selected], grid)
 			grid.AddItem(v_diff, 0, 1, 1, 1, 1, 1, false)
 			return nil
 		case tcell.KeyRune:
@@ -179,7 +179,7 @@ func view_main() tview.Primitive {
 					selected++
 				}
 				table.Select(selected, 0)
-				view_main_statusbar(commitlist[selected], table, status_bar)
+				ViewMainStatusbar(commitlist[selected], table, status_bar)
 				return nil
 			case 'k':
 				selected, _ := table.GetSelection()
@@ -187,7 +187,7 @@ func view_main() tview.Primitive {
 					selected--
 				}
 				table.Select(selected, 0)
-				view_main_statusbar(commitlist[selected], table, status_bar)
+				ViewMainStatusbar(commitlist[selected], table, status_bar)
 				return nil
 			}
 		}
